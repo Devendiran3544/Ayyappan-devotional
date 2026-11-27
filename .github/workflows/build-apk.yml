@@ -13,14 +13,20 @@ jobs:
         uses: actions/checkout@v4
       - name: Extract V2 Android project archive
         run: unzip -o SabarimalaYatraGuide_V2_SourceCode.zip -d project
-      - name: Fix malformed Kotlin multiline string in source archive
+      - name: Repair Kotlin lyrics string (RCA fix)
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path('project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt')
           s = p.read_text(encoding='utf-8')
-          s = s.replace('lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\n\\n$cleanTitle",', 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\\\n\\\\n$cleanTitle",')
-          p.write_text(s, encoding='utf-8')
+          pattern = r'lyricsTa = "சுவாமியே சரணம் ஐயப்பா![\\s\\S]*?\\$cleanTitle",'
+          replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\\\n\\\\n$cleanTitle",'
+          s2, n = re.subn(pattern, replacement, s, count=1)
+          if n != 1:
+              raise SystemExit(f'Expected to repair exactly 1 lyricsTa string, repaired {n}')
+          p.write_text(s2, encoding='utf-8')
+          print('Repaired malformed lyricsTa string.')
           PY
       - name: Diagnose source snippet
         run: sed -n '140,170p' project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt
