@@ -20,9 +20,9 @@ jobs:
           import re
           p = Path('project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt')
           s = p.read_text(encoding='utf-8')
-          pattern = r'lyricsTa\\s*=\\s*"[\\s\\S]*?"\\s*,\\s*(?=sourceType\\s*=)'
+          pattern = r'lyricsTa\s*=\s*"[\s\S]*?"\s*,\s*(?=sourceType\s*=)'
           replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\\\n\\\\n$cleanTitle",\\n            '
-          s2, n = re.subn(pattern, replacement, s, count=1)
+          s2, n = re.subn(pattern, lambda _: replacement, s, count=1)
           if n != 1: raise SystemExit(f'Patch count mismatch: {n}')
           p.write_text(s2, encoding='utf-8')
           print('Repaired lyricsTa string')
