@@ -20,13 +20,12 @@ jobs:
           import re
           p = Path('project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt')
           s = p.read_text(encoding='utf-8')
-          pattern = r'lyricsTa = "சுவாமியே சரணம் ஐயப்பா![\\s\\S]*?\\$cleanTitle",'
-          replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\\\n\\\\n$cleanTitle",'
+          pattern = r'lyricsTa\\s*=\\s*"[\\s\\S]*?"\\s*,\\s*(?=sourceType\\s*=)'
+          replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\\\n\\\\n$cleanTitle",\\n            '
           s2, n = re.subn(pattern, replacement, s, count=1)
-          if n != 1:
-              raise SystemExit(f'Expected to repair exactly 1 lyricsTa string, repaired {n}')
+          if n != 1: raise SystemExit(f'Patch count mismatch: {n}')
           p.write_text(s2, encoding='utf-8')
-          print('Repaired malformed lyricsTa string.')
+          print('Repaired lyricsTa string')
           PY
       - name: Diagnose source snippet
         run: sed -n '140,170p' project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt
