@@ -1,4 +1,4 @@
-name: Build Sabarimala Yatra Guide V2 APK
+name: Build & Test Sabarimala Yatra Guide V2.2 APK
 
 on:
   push:
@@ -6,47 +6,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Extract V2 Android project archive
-        run: unzip -o SabarimalaYatraGuide_V2_SourceCode.zip -d project
-      - name: Repair Kotlin lyrics strings
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p = Path('project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt')
-          s = p.read_text(encoding='utf-8')
-          pattern = r'lyricsTa\s*=\s*"[^"]*(?:\n[^"]*)*"?\s*,\s*(?=sourceType\s*=)'
-          replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\n\\n$cleanTitle",\n            '
-          s2, n = re.subn(pattern, lambda _: replacement, s)
-          if n < 1: raise SystemExit(f'No lyricsTa blocks repaired: {n}')
-          p.write_text(s2, encoding='utf-8')
-          print(f'Repaired {n} lyricsTa block(s)')
-          PY
-      - name: Diagnose source snippet
-        run: sed -n '140,170p' project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - name: Extract V2.2 audited source
+        run: unzip -o SabarimalaYatraGuide_V2_2_Audited_Complete.zip -d project
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: temurin
-      - name: Set up Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
+      - name: Run unit tests
+        working-directory: project
+        run: gradle testDebugUnitTest --stacktrace
       - name: Build APK
         working-directory: project
         run: gradle assembleDebug --stacktrace
       - name: Rename APK
         working-directory: project
-        run: cp app/build/outputs/apk/debug/app-debug.apk ../SabarimalaYatraGuide-v2.0.apk
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        run: cp app/build/outputs/apk/debug/app-debug.apk ../SabarimalaYatraGuide-v2.2.0.apk
+      - uses: actions/upload-artifact@v4
         with:
-          name: SabarimalaYatraGuide-V2-Installable-APK
-          path: SabarimalaYatraGuide-v2.0.apk
+          name: SabarimalaYatraGuide-V2.2-APK
+          path: SabarimalaYatraGuide-v2.2.0.apk
           retention-days: 90
