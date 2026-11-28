@@ -12,6 +12,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Extract V2.2 audited source
         run: unzip -o SabarimalaYatraGuide_V2_2_Audited_Complete.zip -d project
+      - name: Repair malformed local-song lyrics string
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p = Path('project/app/src/main/java/com/sabarimala/yatraguide/data/SongLibraryRepository.kt')
+          s = p.read_text(encoding='utf-8')
+          pattern = r'lyricsTa\s*=\s*"[^"]*(?:\n[^"]*)*"?\s*,\s*(?=sourceType\s*=)'
+          replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\n\\n$cleanTitle",\n            '
+          s2, n = re.subn(pattern, lambda _: replacement, s)
+          if n != 1:
+              raise SystemExit(f'Expected one malformed block to repair, found {n}')
+          p.write_text(s2, encoding='utf-8')
+          print('Repaired malformed lyricsTa string')
+          PY
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
