@@ -22,8 +22,9 @@ jobs:
           pattern = r'lyricsTa\s*=\s*"[^"]*(?:\n[^"]*)*"?\s*,\s*(?=sourceType\s*=)'
           replacement = 'lyricsTa = "சுவாமியே சரணம் ஐயப்பா!\\n\\n$cleanTitle",\n            '
           s2, n = re.subn(pattern, lambda _: replacement, s)
-          if n != 1:
-              raise SystemExit(f'Expected one malformed block to repair, found {n}')
+          if n < 1:
+              raise SystemExit('No malformed lyricsTa block found to repair')
+          print(f'Repaired {n} malformed lyricsTa string block(s)')
           p.write_text(s2, encoding='utf-8')
           print('Repaired malformed lyricsTa string')
           PY
